@@ -1,6 +1,53 @@
 import type { CharacteristicValue, PlatformAccessory, Service } from 'homebridge';
 
-import type { ExampleHomebridgePlatform } from './platform.js';
+import type { ExampleHomebridgePlatform, FrontDoorLockPlatform } from './platform.js';
+
+export class FrontDoorLockPlatformAccessory {
+  private service: Service;
+
+  private lockCurrentState: CharacteristicValue;
+  private lockTargetState: CharacteristicValue;
+
+
+  constructor(
+    private readonly platform: FrontDoorLockPlatform,
+    private readonly accessory: PlatformAccessory,
+  ) {
+    this.accessory.getService(this.platform.Service.AccessoryInformation)!
+      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Amazon')
+      .setCharacteristic(this.platform.Characteristic.Model, 'ESP32')
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, '2');
+
+    this.lockCurrentState = this.platform.Characteristic.LockCurrentState.UNSECURED;
+    this.lockTargetState = this.platform.Characteristic.LockTargetState.UNSECURED;
+    
+    this.service = this.accessory.getService(this.platform.Service.LockMechanism) || this.accessory.addService(this.platform.Service.LockMechanism);
+
+    this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.deviceName);
+
+    this.service.getCharacteristic(this.platform.Characteristic.On)
+      .onGet(this.getLockCurrentState.bind(this)); 
+    this.service.getCharacteristic(this.platform.Characteristic.LockCurrentState)
+      .onSet(this.setLockTargetState.bind(this))
+      .onGet(this.getLockTargetState.bind(this));
+  }
+
+  async getLockCurrentState(): Promise<CharacteristicValue> {
+    this.platform.log.debug('Get Characteristic LockCurrentState ->', this.lockCurrentState);
+    return this.lockCurrentState;
+  }
+
+  async setLockTargetState(value: CharacteristicValue) {
+    this.platform.log.debug('Set Characteristic LockTargetState ->', value);
+    this.lockTargetState = value;
+    this.service.updateCharacteristic(this.platform.Characteristic.LockTargetState, this.lockTargetState);
+  }
+
+  async getLockTargetState(): Promise<CharacteristicValue> {
+    this.platform.log.debug('Get Characteristic LockTargetState ->', this.lockTargetState);
+    return this.lockTargetState;
+  }
+}
 
 /**
  * Platform Accessory

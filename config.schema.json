@@ -10,10 +10,15 @@
     ],
     "additionalProperties": false,
     "properties": {
-      "name": {
+      "deviceIp": {
+        "title": "IP Address",
+        "type": "string",
+        "default": "192.168.68.67"
+      },
+      "deviceName": {
         "title": "Name",
         "type": "string",
-        "default": "Example Dynamic Platform"
+        "default": "Front Door Lock"
       }
     }
   }

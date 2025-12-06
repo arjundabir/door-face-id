@@ -1,10 +1,64 @@
 import type { API, Characteristic, DynamicPlatformPlugin, Logging, PlatformAccessory, PlatformConfig, Service } from 'homebridge';
 
-import { ExamplePlatformAccessory } from './platformAccessory.js';
+import { ExamplePlatformAccessory, FrontDoorLockPlatformAccessory } from './platformAccessory.js';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
 
 // This is only required when using Custom Services and Characteristics not support by HomeKit
 import { EveHomeKitTypes } from 'homebridge-lib/EveHomeKitTypes';
+
+
+export class FrontDoorLockPlatform implements DynamicPlatformPlugin {
+  public readonly Service: typeof Service;
+  public readonly Characteristic: typeof Characteristic;
+
+  public readonly accessories: Map<string, PlatformAccessory> = new Map();
+  public readonly discoveredCacheUUIDs: string[] = [];
+
+  constructor(
+    public readonly log: Logging,
+    public readonly config: PlatformConfig,
+    public readonly api: API,
+  ) {
+    this.Service = api.hap.Service;
+    this.Characteristic = api.hap.Characteristic;
+
+    this.log.debug('Finished initializing platform:', this.config.name);
+
+    this.api.on('didFinishLaunching', () => {
+      log.debug('Executed didFinishLaunching callback');
+      // run the method to discover / register your devices as accessories
+      this.discoverDevices();
+    });
+  }
+  discoverDevices() {
+    this.log.info('Discovering devices');
+
+    for (const device of this.config.devices) {
+      const uuid = this.api.hap.uuid.generate(device.deviceIp);
+
+      const existingAccessory = this.accessories.get(uuid);
+
+      if(existingAccessory) {
+        this.log.info('Restoring existing lock from cache: ', existingAccessory);
+        new FrontDoorLockPlatformAccessory(this, existingAccessory);
+      } else {
+        this.log.info('Adding new lock:', device.deviceName);
+        const accessory = new this.api.platformAccessory(device.deviceName, uuid);
+        accessory.context.device = device;
+        new FrontDoorLockPlatformAccessory(this, accessory);
+        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+        
+        this.discoveredCacheUUIDs.push(uuid);
+      }
+    }
+  }
+
+  configureAccessory(accessory: PlatformAccessory) {
+    this.log.info('Loading accessory from cache:', accessory.displayName);
+    this.accessories.set(accessory.UUID, accessory);
+  }    
+}
+
 
 /**
  * HomebridgePlatform
@@ -33,7 +87,7 @@ export class ExampleHomebridgePlatform implements DynamicPlatformPlugin {
     this.Service = api.hap.Service;
     this.Characteristic = api.hap.Characteristic;
 
-    // This is only required when using Custom Services and Characteristics not support by HomeKit
+    // // This is only required when using Custom Services and Characteristics not support by HomeKit
     this.CustomServices = new EveHomeKitTypes(this.api).Services;
     this.CustomCharacteristics = new EveHomeKitTypes(this.api).Characteristics;
 
