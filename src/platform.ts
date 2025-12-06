@@ -33,7 +33,14 @@ export class FrontDoorLockPlatform implements DynamicPlatformPlugin {
   discoverDevices() {
     this.log.info('Discovering devices');
 
-    for (const device of this.config.devices) {
+    const exampleDevices = [
+      {
+        deviceIp: '192.168.68.63',
+        deviceName: 'Front Door Lock',
+      },
+    ];
+
+    for (const device of exampleDevices) {
       const uuid = this.api.hap.uuid.generate(device.deviceIp);
 
       const existingAccessory = this.accessories.get(uuid);

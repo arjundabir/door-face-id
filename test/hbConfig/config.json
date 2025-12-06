@@ -27,10 +27,5 @@
       "platform": "front-door-lock"
     }
   ],
-  "accessories": [
-    {
-      "deviceIp": "192.168.68.67",
-      "deviceName": "door-lock"
-    }
-  ]
+  "accessories": []
 }

@@ -6,4 +6,4 @@ export const PLATFORM_NAME = 'front-door-lock';
 /**
  * This must match the name of your plugin as defined the package.json `name` property
  */
-export const PLUGIN_NAME = 'Front Door Lock';
+export const PLUGIN_NAME = '@arjundabir/homebridge-door-lock';
