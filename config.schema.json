@@ -1,11 +1,13 @@
 {
-  "pluginAlias": "ExampleHomebridgePlugin",
+  "pluginAlias": "front-door-lock",
   "pluginType": "platform",
   "singular": true,
   "strictValidation": false,
   "schema": {
     "type": "object",
-    "required": ["name"],
+    "required": [
+      "name"
+    ],
     "additionalProperties": false,
     "properties": {
       "name": {

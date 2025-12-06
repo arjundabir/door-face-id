@@ -1,13 +1,13 @@
 {
   "bridge": {
-    "name": "PluginTemplate",
+    "name": "Front Door Lock",
     "username": "AA:BB:CC:DD:EE:FF",
     "port": 51826,
     "pin": "031-45-154"
   },
-  "description": "HomeBridge HTTP Status Control",
+  "description": "Front Door Lock",
   "plugins": [
-    "homebridge-plugin-name",
+    "@arjundabir/homebridge-door-lock",
     "homebridge-config-ui-x"
   ],
   "platforms": [
@@ -23,9 +23,14 @@
       "debug": false
     },
     {
-      "name": "homebridge-plugin-name",
-      "platform": "ExampleHomebridgePlugin"
+      "name": "homebridge-door-lock",
+      "platform": "front-door-lock"
     }
   ],
-  "accessories": []
+  "accessories": [
+    {
+      "deviceIp": "192.168.68.67",
+      "deviceName": "door-lock"
+    }
+  ]
 }
