@@ -16,7 +16,7 @@ export class FrontDoorLockPlatformAccessory {
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Amazon')
       .setCharacteristic(this.platform.Characteristic.Model, 'ESP32')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, '2');
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, 'ESP32-2');
 
     this.lockCurrentState = this.platform.Characteristic.LockCurrentState.UNSECURED;
     this.lockTargetState = this.platform.Characteristic.LockTargetState.UNSECURED;
@@ -25,11 +25,14 @@ export class FrontDoorLockPlatformAccessory {
 
     this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.deviceName);
 
-    this.service.getCharacteristic(this.platform.Characteristic.On)
-      .onGet(this.getLockCurrentState.bind(this)); 
+    // LockCurrentState is read-only - reports the actual state of the lock
     this.service.getCharacteristic(this.platform.Characteristic.LockCurrentState)
-      .onSet(this.setLockTargetState.bind(this))
-      .onGet(this.getLockTargetState.bind(this));
+      .onGet(this.getLockCurrentState.bind(this));
+
+    // LockTargetState is what HomeKit sets when user taps lock/unlock
+    this.service.getCharacteristic(this.platform.Characteristic.LockTargetState)
+      .onGet(this.getLockTargetState.bind(this))
+      .onSet(this.setLockTargetState.bind(this));
   }
 
   async getLockCurrentState(): Promise<CharacteristicValue> {
@@ -39,7 +42,13 @@ export class FrontDoorLockPlatformAccessory {
 
   async setLockTargetState(value: CharacteristicValue) {
     this.platform.log.debug('Set Characteristic LockTargetState ->', value);
-    this.lockTargetState = value;
+    await fetch(`http://${this.accessory.context.device.deviceIp}/face-id`, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: value ? 'lock' : 'unlock',
+      }),
+    });
+    this.lockTargetState = value ? this.platform.Characteristic.LockTargetState.SECURED : this.platform.Characteristic.LockTargetState.UNSECURED;
     this.service.updateCharacteristic(this.platform.Characteristic.LockTargetState, this.lockTargetState);
   }
 
